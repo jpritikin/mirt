@@ -318,7 +318,7 @@ ESTIMATION <- function(data, model, group, itemtype = NULL, guess = 0, upper = 1
                                          nfact=nfact, constrain=constrain, verbose=opts$verbose,
                                          SEM=any(opts$SE.type %in% c('SEM', 'complete')) && opts$SE,
                                          accelerate=opts$accelerate, CUSTOM.IND=CUSTOM.IND, SLOW.IND=SLOW.IND,
-                                         customPriorFun=opts$customPriorFun),
+                                         customPriorFun=opts$customPriorFun, technical=opts$technical),
                              Theta=Theta, DERIV=DERIV)
         startlongpars <- ESTIMATE$longpars
         rlist <- ESTIMATE$rlist
@@ -491,6 +491,8 @@ ESTIMATION <- function(data, model, group, itemtype = NULL, guess = 0, upper = 1
     }
 
     ####post estimation stats
+    if (is.null(ESTIMATE$mstepLogLik)) ESTIMATE$mstepLogLik <- 0
+    mstepLogLik <- ESTIMATE$mstepLogLik
     r <- rr
     N <- sum(r)
     tmp <- dfsubtr
@@ -540,6 +542,7 @@ ESTIMATION <- function(data, model, group, itemtype = NULL, guess = 0, upper = 1
                        BIC=BIC,
                        SABIC=SABIC,
                        logLik=logLik,
+                       mstepLogLik=mstepLogLik,
                        F=F,
                        h2=h2,
                        tabdata=PrepList[[1L]]$tabdata2,
@@ -585,6 +588,7 @@ ESTIMATION <- function(data, model, group, itemtype = NULL, guess = 0, upper = 1
                        BIC=BIC,
                        SABIC=SABIC,
                        logLik=logLik,
+                       mstepLogLik=mstepLogLik,
                        F=F,
                        h2=h2,
                        tabdata=PrepList[[1L]]$tabdata2,
@@ -625,6 +629,7 @@ ESTIMATION <- function(data, model, group, itemtype = NULL, guess = 0, upper = 1
                        BIC=BIC,
                        SABIC=SABIC,
                        logLik=logLik,
+                       mstepLogLik=mstepLogLik,
                        F=F,
                        h2=h2,
                        CUSTOM.IND=CUSTOM.IND,
@@ -676,6 +681,7 @@ ESTIMATION <- function(data, model, group, itemtype = NULL, guess = 0, upper = 1
                    invariance=invariance,
                    df=df,
                    logLik=logLik,
+                   mstepLogLik=mstepLogLik,
                    method=opts$method,
                    SElogLik=SElogLik,
                    AIC=AIC,

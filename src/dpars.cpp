@@ -2,6 +2,60 @@
 #include "traceLinePts.h"
 #include "Estep.h"
 
+std::string string_snprintf(const char *fmt, ...)
+{
+    int size = 100;
+    std::string str;
+    va_list ap;
+    while (1) {
+        str.resize(size);
+        va_start(ap, fmt);
+        int n = vsnprintf((char *)str.c_str(), size, fmt, ap);
+        va_end(ap);
+        if (n > -1 && n < size) {
+            str.resize(n);
+            return str;
+        }
+        if (n > -1)
+            size = n + 1;
+        else
+            size *= 2;
+    }
+    return str;
+}
+
+void pda(const double *ar, int rows, int cols)
+{
+	if (rows == 0 || cols == 0) return;
+	std::string buf;
+	for (int rx=0; rx < rows; rx++) {   // column major order
+		for (int cx=0; cx < cols; cx++) {
+			buf += string_snprintf("%.6g, ", ar[cx * rows + rx]);
+		}
+		buf += "\n";
+	}
+	Rprintf("%s", buf.c_str());
+}
+
+void showMatrix(NumericMatrix mat, int rows, int cols) {
+  if (rows<0) rows = mat.nrow();
+  if (cols<0) cols = mat.ncol();
+  for (int rx=0; rx < rows; rx++) {
+    for (int cx=0; cx < cols; cx++) {
+      Rprintf("%.3g ", mat(rx,cx));
+    }
+    Rprintf("\n");
+  }
+}
+
+void showVector(NumericVector vec, int len) {
+  if (len < 0) len = vec.size();
+  for (int cx=0; cx < len; cx++) {
+    Rprintf("%.3g ", vec(cx));
+  }
+  Rprintf("\n");
+}
+
 static vector<double> makeOffterm(const NumericMatrix &dat, const NumericVector &p, const vector<double> &aTheta,
         const int &cat)
 {
@@ -433,6 +487,7 @@ void d_dich(vector<double> &grad, NumericMatrix &hess, const vector<double> &par
     const double d = par[nfact];
     const double expg = par[nfact+1];
     const double expu = par[nfact+2];
+    pda(par.data(), 1, par.size());
     const double g = antilogit(&expg);
     const double u = antilogit(&expu);
     const double difexpg = difexp(&g);

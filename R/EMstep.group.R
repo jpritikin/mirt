@@ -119,6 +119,7 @@ EM.group <- function(pars, constrain, Ls, PrepList, list, Theta, DERIV)
         Prior <- tmp$Prior
         #Estep
         LL <- 0
+        MstepLL <- 0
         for(g in 1L:ngroups){
             if(BFACTOR){
                 rlist[[g]] <- Estep.bfactor(pars=pars[[g]], tabdata=PrepList[[g]]$tabdata,
@@ -144,6 +145,26 @@ EM.group <- function(pars, constrain, Ls, PrepList, list, Theta, DERIV)
         preMstep.longpars2 <- preMstep.longpars
         preMstep.longpars <- longpars
         if(all(!est) && all(!groupest)) break
+
+        if (!is.null(list$technical$debugderiv)) {
+            dd <- list$technical$debugderiv
+            longpars[est][dd$param] <- dd$value
+            pars <- reloadPars(longpars=longpars, pars=pars, ngroups=ngroups, J=J)
+            MstepLL <- Mstep.LL(longpars[est], est=est, longpars=longpars, pars=pars, ngroups=ngroups, J=J,
+                                gTheta=gTheta, PrepList=PrepList, L=L,
+                                CUSTOM.IND=CUSTOM.IND, SLOW.IND=list$SLOW.IND, constrain=constrain,
+                                UBOUND=UBOUND, LBOUND=LBOUND, itemloc=itemloc, DERIV=DERIV,
+                                rlist=rlist, ANY.PRIOR=ANY.PRIOR)
+            for(group in 1:ngroups){
+                for (i in 1:J){
+                    deriv <- Deriv(x=pars[[group]][[i]], Theta=Theta, estHess=TRUE)
+                    pars[[group]][[i]]@gradient <- deriv$grad
+                    pars[[group]][[i]]@hessian <- deriv$hess
+                }
+            }
+            break
+        }
+
         longpars <- Mstep(pars=pars, est=est, longpars=longpars, ngroups=ngroups, J=J,
                           gTheta=gTheta, itemloc=itemloc, Prior=Prior, ANY.PRIOR=ANY.PRIOR,
                           CUSTOM.IND=CUSTOM.IND, SLOW.IND=list$SLOW.IND, groupest=groupest, 
@@ -203,7 +224,7 @@ EM.group <- function(pars, constrain, Ls, PrepList, list, Theta, DERIV)
                     time=c(Estep=as.numeric(Estep.time), Mstep=as.numeric(Mstep.time)), collectLL=na.omit(collectLL)))
     }
     ret <- list(pars=pars, cycles = cycles, info=matrix(0), longpars=longpars, converge=converge,
-                logLik=LL, rlist=rlist, SElogLik=0, L=L, infological=infological,
+                logLik=LL, mstepLogLik=MstepLL, rlist=rlist, SElogLik=0, L=L, infological=infological,
                 estindex_unique=estindex_unique, correction=correction, hess=hess, random=list(),
                 Prior=Prior, time=c(Estep=as.numeric(Estep.time), Mstep=as.numeric(Mstep.time)),
                 prior=prior, Priorbetween=Priorbetween, sitems=sitems)
